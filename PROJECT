@@ -3,4 +3,14 @@ layout:
 - go.kubebuilder.io/v3
 projectName: service-operator
 repo: github.com/ghaabor/service-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: ghaabor.io
+  group: apps
+  kind: Deployment
+  path: github.com/ghaabor/service-operator/api/v1
+  version: v1
 version: "3"

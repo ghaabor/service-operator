@@ -6,7 +6,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - apps.ghaabor.io
+  - apps
   resources:
   - deployments
   verbs:
@@ -18,15 +18,33 @@ rules:
   - update
   - watch
 - apiGroups:
+  - apps
+  resources:
+  - deployments/status
+  verbs:
+  - get
+- apiGroups:
   - apps.ghaabor.io
   resources:
-  - deployments/finalizers
+  - webservices
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.ghaabor.io
+  resources:
+  - webservices/finalizers
   verbs:
   - update
 - apiGroups:
   - apps.ghaabor.io
   resources:
-  - deployments/status
+  - webservices/status
   verbs:
   - get
   - patch

@@ -1,13 +1,13 @@
-# permissions for end users to view deployments.
+# permissions for end users to view webservices.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: deployment-viewer-role
+  name: webservice-viewer-role
 rules:
 - apiGroups:
   - apps.ghaabor.io
   resources:
-  - deployments
+  - webservices
   verbs:
   - get
   - list
@@ -15,6 +15,6 @@ rules:
 - apiGroups:
   - apps.ghaabor.io
   resources:
-  - deployments/status
+  - webservices/status
   verbs:
   - get

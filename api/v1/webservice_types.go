@@ -20,20 +20,20 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// DeploymentSpec defines the desired state of Deployment
-type DeploymentSpec struct {
+// WebServiceSpec defines the desired state of WebService
+type WebServiceSpec struct {
 	// Replicas is the number of desired replicas.
 	Replicas int32 `json:"replicas"`
 
-	// Host is the hostname of the deployment.
+	// Host is the hostname of the application.
 	Host string `json:"host"`
 
-	// Image is the image to use for the deployment.
+	// Image is the image to use for the pods.
 	Image string `json:"image"`
 }
 
-// DeploymentStatus defines the observed state of Deployment
-type DeploymentStatus struct {
+// WebServiceStatus defines the observed state of WebService
+type WebServiceStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
@@ -41,24 +41,27 @@ type DeploymentStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Deployment is the Schema for the deployments API
-type Deployment struct {
+// WebService is the Schema for the webservices API
+// +kubebuilder:printcolumn:name="Replicas",type=integer,JSONPath=`.spec.replicas`
+// +kubebuilder:printcolumn:name="Host",type=string,JSONPath=`.spec.host`
+// +kubebuilder:printcolumn:name="Image",type=string,JSONPath=`.spec.image`
+type WebService struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   DeploymentSpec   `json:"spec,omitempty"`
-	Status DeploymentStatus `json:"status,omitempty"`
+	Spec   WebServiceSpec   `json:"spec,omitempty"`
+	Status WebServiceStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// DeploymentList contains a list of Deployment
-type DeploymentList struct {
+// WebServiceList contains a list of WebService
+type WebServiceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Deployment `json:"items"`
+	Items           []WebService `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Deployment{}, &DeploymentList{})
+	SchemeBuilder.Register(&WebService{}, &WebServiceList{})
 }

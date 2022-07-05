@@ -5,20 +5,30 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.9.0
   creationTimestamp: null
-  name: deployments.apps.ghaabor.io
+  name: webservices.apps.ghaabor.io
 spec:
   group: apps.ghaabor.io
   names:
-    kind: Deployment
-    listKind: DeploymentList
-    plural: deployments
-    singular: deployment
+    kind: WebService
+    listKind: WebServiceList
+    plural: webservices
+    singular: webservice
   scope: Namespaced
   versions:
-  - name: v1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.replicas
+      name: Replicas
+      type: integer
+    - jsonPath: .spec.host
+      name: Host
+      type: string
+    - jsonPath: .spec.image
+      name: Image
+      type: string
+    name: v1
     schema:
       openAPIV3Schema:
-        description: Deployment is the Schema for the deployments API
+        description: WebService is the Schema for the webservices API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,13 +43,13 @@ spec:
           metadata:
             type: object
           spec:
-            description: DeploymentSpec defines the desired state of Deployment
+            description: WebServiceSpec defines the desired state of WebService
             properties:
               host:
-                description: Host is the hostname of the deployment.
+                description: Host is the hostname of the application.
                 type: string
               image:
-                description: Image is the image to use for the deployment.
+                description: Image is the image to use for the pods.
                 type: string
               replicas:
                 description: Replicas is the number of desired replicas.
@@ -51,7 +61,7 @@ spec:
             - replicas
             type: object
           status:
-            description: DeploymentStatus defines the observed state of Deployment
+            description: WebServiceStatus defines the observed state of WebService
             type: object
         type: object
     served: true

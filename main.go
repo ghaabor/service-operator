@@ -89,11 +89,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.DeploymentReconciler{
+	if err = (&controllers.WebServiceReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Deployment")
+		setupLog.Error(err, "unable to create controller", "controller", "WebService")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

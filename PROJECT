@@ -10,7 +10,7 @@ resources:
   controller: true
   domain: ghaabor.io
   group: apps
-  kind: Deployment
+  kind: WebService
   path: github.com/ghaabor/service-operator/api/v1
   version: v1
 version: "3"

@@ -1,13 +1,13 @@
-# permissions for end users to edit deployments.
+# permissions for end users to edit webservices.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: deployment-editor-role
+  name: webservice-editor-role
 rules:
 - apiGroups:
   - apps.ghaabor.io
   resources:
-  - deployments
+  - webservices
   verbs:
   - create
   - delete
@@ -19,6 +19,6 @@ rules:
 - apiGroups:
   - apps.ghaabor.io
   resources:
-  - deployments/status
+  - webservices/status
   verbs:
   - get

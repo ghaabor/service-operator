@@ -20,16 +20,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // DeploymentSpec defines the desired state of Deployment
 type DeploymentSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Replicas is the number of desired replicas.
+	Replicas int32 `json:"replicas"`
 
-	// Foo is an example field of Deployment. Edit deployment_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Host is the hostname of the deployment.
+	Host string `json:"host"`
+
+	// Image is the image to use for the deployment.
+	Image string `json:"image"`
 }
 
 // DeploymentStatus defines the observed state of Deployment

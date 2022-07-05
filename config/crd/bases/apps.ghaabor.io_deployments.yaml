@@ -35,10 +35,20 @@ spec:
           spec:
             description: DeploymentSpec defines the desired state of Deployment
             properties:
-              foo:
-                description: Foo is an example field of Deployment. Edit deployment_types.go
-                  to remove/update
+              host:
+                description: Host is the hostname of the deployment.
                 type: string
+              image:
+                description: Image is the image to use for the deployment.
+                type: string
+              replicas:
+                description: Replicas is the number of desired replicas.
+                format: int32
+                type: integer
+            required:
+            - host
+            - image
+            - replicas
             type: object
           status:
             description: DeploymentStatus defines the observed state of Deployment

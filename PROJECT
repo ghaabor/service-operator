@@ -1,0 +1,6 @@
+domain: ghaabor.io
+layout:
+- go.kubebuilder.io/v3
+projectName: service-operator
+repo: github.com/ghaabor/service-operator
+version: "3"

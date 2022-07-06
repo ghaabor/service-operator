@@ -4,5 +4,5 @@ metadata:
   name: webservice-sample
 spec:
   replicas: 1
-  host: "testapp.ghaabor.io"
+  host: "demo.ghaabor.io"
   image: "nginx:latest"

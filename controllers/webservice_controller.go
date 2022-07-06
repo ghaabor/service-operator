@@ -247,6 +247,16 @@ func (r *WebServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		}
 	}
 
+	// update childIngress host if needed
+	if childIngress.Spec.Rules[0].Host != webService.Spec.Host {
+		log.Info("updating child ingress", "ingress", childIngress.Name)
+		childIngress.Spec.Rules[0].Host = webService.Spec.Host
+		if err := r.Update(ctx, &childIngress); err != nil {
+			log.Error(err, "failed to update child ingress", "ingress", childIngress.Name)
+			return ctrl.Result{}, err
+		}
+	}
+
 	log.Info("WebService successfully reconciled")
 	return ctrl.Result{}, nil
 }

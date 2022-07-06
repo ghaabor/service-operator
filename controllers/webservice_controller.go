@@ -21,6 +21,7 @@ import (
 
 	kapps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -45,6 +46,8 @@ type WebServiceReconciler struct {
 //+kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get
 //+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=core,resources=services/status,verbs=get
+//+kubebuilder:rbac:groups=networking,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=networking,resources=ingresses/status,verbs=get
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -63,6 +66,17 @@ func (r *WebServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err := r.Get(ctx, req.NamespacedName, &webService); err != nil {
 		// if WebService not found, delete related resources
 		if apierrors.IsNotFound(err) {
+			// delete ingress first
+			var childIngress networkingv1.Ingress
+			if err := r.Get(ctx, req.NamespacedName, &childIngress); err != nil {
+				return ctrl.Result{}, client.IgnoreNotFound(err)
+			}
+			log.Info("deleting child ingress", "ingress", childIngress.Name)
+			if err := r.Delete(ctx, &childIngress); err != nil {
+				log.Error(err, "failed to delete child ingress", "ingress", childIngress.Name)
+				return ctrl.Result{}, err
+			}
+
 			// delete childService
 			var childService corev1.Service
 			if err := r.Get(ctx, req.NamespacedName, &childService); err != nil {
@@ -174,6 +188,58 @@ func (r *WebServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 			if err := r.Create(ctx, &childService); err != nil {
 				log.Error(err, "failed to create child service", "service", childService.Name)
+				return ctrl.Result{}, err
+			}
+		} else {
+			return ctrl.Result{}, client.IgnoreNotFound(err)
+		}
+	}
+
+	var childIngress networkingv1.Ingress
+	if err := r.Get(ctx, req.NamespacedName, &childIngress); err != nil {
+		if apierrors.IsNotFound(err) {
+			// child ingress is not created yet, create it
+			nginxIngressClassName := "nginx"
+			pathType := networkingv1.PathTypePrefix
+
+			log.Info("child ingress not found, creating", "ingress", webService.Name)
+			childIngress = networkingv1.Ingress{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      webService.Name,
+					Namespace: webService.Namespace,
+					Labels:    webService.Labels,
+				},
+				Spec: networkingv1.IngressSpec{
+					IngressClassName: &nginxIngressClassName,
+					TLS:              []networkingv1.IngressTLS{},
+					Rules: []networkingv1.IngressRule{
+						{
+							Host: webService.Spec.Host,
+							IngressRuleValue: networkingv1.IngressRuleValue{
+								HTTP: &networkingv1.HTTPIngressRuleValue{
+									Paths: []networkingv1.HTTPIngressPath{
+										{
+											Path:     "/",
+											PathType: &pathType,
+											Backend: networkingv1.IngressBackend{
+												Service: &networkingv1.IngressServiceBackend{
+													Name: childService.Name,
+													Port: networkingv1.ServiceBackendPort{
+														Name: "http",
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			if err := r.Create(ctx, &childIngress); err != nil {
+				log.Error(err, "failed to create child ingress", "ingress", childIngress.Name)
 				return ctrl.Result{}, err
 			}
 		} else {

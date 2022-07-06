@@ -5,8 +5,16 @@
 // TODO(user): An in-depth paragraph about your project and overview of use
 
 ## Getting Started
-You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
+You’ll need a Kubernetes cluster to run against. You can use something like [KIND](https://sigs.k8s.io/kind), [minikube](https://minikube.sigs.k8s.io/docs/) or Docker Desktop to get a local cluster for testing, or run against a remote cluster. 
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
+
+### Local cluster setup for development
+1. [Install the NGINX Ingress controller into your cluster](https://kubernetes.github.io/ingress-nginx/deploy/#quick-start)
+2. Install the CRD: `make install`
+3. Run the controller in the terminal: `make run`
+4. Install the sample CR: `kubectl apply -f config/samples/apps_v1_webservice.yaml`
+5. Make sure you modify your `/etc/hosts` file and add: `127.0.0.1 demo.ghaabor.io`
+6. Open [demo.ghaabor.io](demo.ghaabor.io) in your browser
 
 ### Running on the cluster
 1. Install Instances of Custom Resources:

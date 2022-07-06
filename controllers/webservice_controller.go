@@ -24,6 +24,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -42,6 +43,8 @@ type WebServiceReconciler struct {
 //+kubebuilder:rbac:groups=apps.ghaabor.io,resources=webservices/finalizers,verbs=update
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get
+//+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=core,resources=services/status,verbs=get
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -58,8 +61,20 @@ func (r *WebServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	var webService appsv1.WebService
 	if err := r.Get(ctx, req.NamespacedName, &webService); err != nil {
+		// if WebService not found, delete related resources
 		if apierrors.IsNotFound(err) {
-			// WebService not found, delete related resources
+			// delete childService
+			var childService corev1.Service
+			if err := r.Get(ctx, req.NamespacedName, &childService); err != nil {
+				return ctrl.Result{}, client.IgnoreNotFound(err)
+			}
+			log.Info("deleting child service", "service", childService.Name)
+			if err := r.Delete(ctx, &childService); err != nil {
+				log.Error(err, "failed to delete child service", "service", childService.Name)
+				return ctrl.Result{}, err
+			}
+
+			// delete deployment last
 			var childDeployment kapps.Deployment
 			if err := r.Get(ctx, req.NamespacedName, &childDeployment); err != nil {
 				return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -67,6 +82,7 @@ func (r *WebServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 			log.Info("deleting child deployment", "deployment", childDeployment.Name)
 			if err := r.Delete(ctx, &childDeployment); err != nil {
+				log.Error(err, "failed to delete child deployment", "deployment", childDeployment.Name)
 				return ctrl.Result{}, err
 			}
 
@@ -80,7 +96,7 @@ func (r *WebServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err := r.Get(ctx, req.NamespacedName, &childDeployment); err != nil {
 		if apierrors.IsNotFound(err) {
 			// child deployment is not created yet, create it
-			log.Info("child deployment not found, creating")
+			log.Info("child deployment not found, creating", "deployment", webService.Name)
 			childDeployment = kapps.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      webService.Name,
@@ -113,7 +129,7 @@ func (r *WebServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			}
 
 			if err := r.Create(ctx, &childDeployment); err != nil {
-				log.Error(err, "failed to create child deployment")
+				log.Error(err, "failed to create child deployment", "deployment", childDeployment.Name)
 				return ctrl.Result{}, err
 			}
 		} else {
@@ -122,12 +138,46 @@ func (r *WebServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	// deployment found, check if it needs to be updated
-	if childDeployment.Spec.Replicas != nil && *childDeployment.Spec.Replicas != webService.Spec.Replicas {
+	if r.deploymentUpdateNeeded(webService, childDeployment) {
 		log.Info("updating child deployment", "deployment", childDeployment.Name)
 		childDeployment.Spec.Replicas = &webService.Spec.Replicas
+		childDeployment.Spec.Template.Spec.Containers[0].Image = webService.Spec.Image
 		if err := r.Update(ctx, &childDeployment); err != nil {
-			log.Error(err, "failed to update child deployment")
+			log.Error(err, "failed to update child deployment", "deployment", childDeployment.Name)
 			return ctrl.Result{}, err
+		}
+	}
+
+	var childService corev1.Service
+	if err := r.Get(ctx, req.NamespacedName, &childService); err != nil {
+		if apierrors.IsNotFound(err) {
+			// child service is not created yet, create it
+			log.Info("child service not found, creating", "service", webService.Name)
+			childService = corev1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      webService.Name,
+					Namespace: webService.Namespace,
+					Labels:    webService.Labels,
+				},
+				Spec: corev1.ServiceSpec{
+					Type: corev1.ServiceTypeClusterIP,
+					Ports: []corev1.ServicePort{
+						{
+							Name:       "http",
+							Port:       80,
+							TargetPort: intstr.FromString("http"),
+						},
+					},
+					Selector: map[string]string{"app": webService.Name},
+				},
+			}
+
+			if err := r.Create(ctx, &childService); err != nil {
+				log.Error(err, "failed to create child service", "service", childService.Name)
+				return ctrl.Result{}, err
+			}
+		} else {
+			return ctrl.Result{}, client.IgnoreNotFound(err)
 		}
 	}
 
@@ -140,4 +190,16 @@ func (r *WebServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&appsv1.WebService{}).
 		Complete(r)
+}
+
+func (r *WebServiceReconciler) deploymentUpdateNeeded(webService appsv1.WebService, childDeployment kapps.Deployment) bool {
+	if childDeployment.Spec.Replicas != nil && *childDeployment.Spec.Replicas != webService.Spec.Replicas {
+		return true
+	}
+
+	if childDeployment.Spec.Template.Spec.Containers[0].Image != webService.Spec.Image {
+		return true
+	}
+
+	return false
 }

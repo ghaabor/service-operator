@@ -15,6 +15,29 @@ You’ll need a Kubernetes cluster to run against. You can use something like [K
 * Modify your `/etc/hosts` file and add: `127.0.0.1 demo.ghaabor.io`
     * Another option is to run e.g. `curl` commands with an addition host header: `curl -H 'Host: demo.ghaabor.io' http://localhost` 
 
+### Example letsencrypt issuer
+
+```yaml
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt
+spec:
+  acme:
+    # The ACME server URL
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    # Email address used for ACME registration
+    email: email@example.com
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt
+    # Enable the HTTP-01 challenge provider
+    solvers:
+    - http01:
+        ingress:
+          class:  nginx
+```
+
 ### Running on the cluster
 1. Deploy the controller to the cluster with the image specified by `IMG`:
 

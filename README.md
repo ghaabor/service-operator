@@ -8,51 +8,35 @@
 You’ll need a Kubernetes cluster to run against. You can use something like [KIND](https://sigs.k8s.io/kind), [minikube](https://minikube.sigs.k8s.io/docs/) or Docker Desktop to get a local cluster for testing, or run against a remote cluster. 
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
-### Local cluster setup for development
-1. [Install the NGINX Ingress controller into your cluster](https://kubernetes.github.io/ingress-nginx/deploy/#quick-start)
-2. Install the CRD: `make install`
-3. Run the controller in the terminal: `make run`
-4. Install the sample CR: `kubectl apply -f config/samples/apps_v1_webservice.yaml`
-5. Make sure you modify your `/etc/hosts` file and add: `127.0.0.1 demo.ghaabor.io`
-6. Open [demo.ghaabor.io](demo.ghaabor.io) in your browser
+### Cluster prerequisites
+* [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/deploy/#quick-start)
+* [cert-manager for NGINX-ingress](https://cert-manager.io/v0.14-docs/tutorials/acme/ingress/#step-7---deploy-a-tls-ingress-resource)
+* Modify your `/etc/hosts` file and add: `127.0.0.1 demo.ghaabor.io`
+    * Another option is to run e.g. `curl` commands with an addition host header: `curl -H 'Host: demo.ghaabor.io' http://localhost` 
 
 ### Running on the cluster
-1. Install Instances of Custom Resources:
+1. Deploy the controller to the cluster with the image specified by `IMG`:
+
+```sh
+make deploy IMG=ghcr.io/ghaabor/service-operator:tag
+```
+
+2. Install Instances of Custom Resources:
 
 ```sh
 kubectl apply -f config/samples/
 ```
 
-2. Build and push your image to the location specified by `IMG`:
-	
-```sh
-make docker-build docker-push IMG=<some-registry>/service-operator:tag
-```
-	
-3. Deploy the controller to the cluster with the image specified by `IMG`:
-
-```sh
-make deploy IMG=<some-registry>/service-operator:tag
-```
-
-### Uninstall CRDs
-To delete the CRDs from the cluster:
-
-```sh
-make uninstall
-```
+3. Open [demo.ghaabor.io](http://demo.ghaabor.io)
 
 ### Undeploy controller
-UnDeploy the controller to the cluster:
+Undeploy the controller to the cluster:
 
 ```sh
 make undeploy
 ```
 
-## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
-
-### How it works
+## How it works
 This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
 
 It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
@@ -72,6 +56,13 @@ make run
 ```
 
 **NOTE:** You can also run this in one step by running: `make install run`
+
+### Uninstall CRDs
+To delete the CRDs from the cluster:
+
+```sh
+make uninstall
+```
 
 ### Modifying the API definitions
 If you are editing the API definitions, generate the manifests such as CRs or CRDs using:

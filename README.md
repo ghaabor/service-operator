@@ -10,7 +10,8 @@ You’ll need a Kubernetes cluster to run against. You can use something like [K
 
 ### Cluster prerequisites
 * [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/deploy/#quick-start)
-* [cert-manager for NGINX-ingress](https://cert-manager.io/v0.14-docs/tutorials/acme/ingress/#step-7---deploy-a-tls-ingress-resource)
+* [cert-manager installed](https://cert-manager.io/docs/installation/kubectl/)
+* [letsencrypt issuer configured](https://cert-manager.io/docs/tutorials/acme/nginx-ingress/#step-6---configure-a-lets-encrypt-issuer)
 * Modify your `/etc/hosts` file and add: `127.0.0.1 demo.ghaabor.io`
     * Another option is to run e.g. `curl` commands with an addition host header: `curl -H 'Host: demo.ghaabor.io' http://localhost` 
 
@@ -18,7 +19,7 @@ You’ll need a Kubernetes cluster to run against. You can use something like [K
 1. Deploy the controller to the cluster with the image specified by `IMG`:
 
 ```sh
-make deploy IMG=ghcr.io/ghaabor/service-operator:tag
+make deploy IMG=ghcr.io/ghaabor/service-operator:main
 ```
 
 2. Install Instances of Custom Resources:

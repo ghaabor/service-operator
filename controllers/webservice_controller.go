@@ -210,7 +210,8 @@ func (r *WebServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 					Namespace: webService.Namespace,
 					Labels:    webService.Labels,
 					Annotations: map[string]string{
-						"cert-manager.io/issuer": "letsencrypt",
+						"cert-manager.io/issuer":                   "letsencrypt",
+						"nginx.ingress.kubernetes.io/ssl-redirect": "true",
 					},
 				},
 				Spec: networkingv1.IngressSpec{

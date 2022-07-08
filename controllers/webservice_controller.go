@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	kapps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -208,10 +209,17 @@ func (r *WebServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 					Name:      webService.Name,
 					Namespace: webService.Namespace,
 					Labels:    webService.Labels,
+					Annotations: map[string]string{
+						"cert-manager.io/issuer":                   "letsencrypt",
+						"nginx.ingress.kubernetes.io/ssl-redirect": "true",
+					},
 				},
 				Spec: networkingv1.IngressSpec{
 					IngressClassName: &nginxIngressClassName,
-					TLS:              []networkingv1.IngressTLS{},
+					TLS: []networkingv1.IngressTLS{{
+						Hosts:      []string{webService.Spec.Host},
+						SecretName: fmt.Sprintf("%s-tls", webService.Name),
+					}},
 					Rules: []networkingv1.IngressRule{
 						{
 							Host: webService.Spec.Host,

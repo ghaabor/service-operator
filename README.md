@@ -15,6 +15,31 @@ You’ll need a Kubernetes cluster to run against. You can use something like [K
 * Modify your `/etc/hosts` file and add: `127.0.0.1 demo.ghaabor.io`
     * Another option is to run e.g. `curl` commands with an addition host header: `curl -H 'Host: demo.ghaabor.io' http://localhost` 
 
+### Example letsencrypt issuer
+
+```yaml
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt
+spec:
+  selfSigned: {}
+```
+
+Or [create your own CA](https://medium.com/nerd-for-tech/adventures-in-encryption-securing-your-laptop-kubernetes-cluster-9e032bf77f3e) and use that to generate keys:
+
+```yaml
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt
+spec:
+  ca:
+    secretName: supersecret-ca-keypair
+```
+
+**NOTE:** When using your own CA, don't forget to import the certificate into your browser of choice!
+
 ### Running on the cluster
 1. Deploy the controller to the cluster with the image specified by `IMG`:
 
@@ -28,7 +53,7 @@ make deploy IMG=ghcr.io/ghaabor/service-operator:main
 kubectl apply -f config/samples/
 ```
 
-3. Open [demo.ghaabor.io](http://demo.ghaabor.io)
+3. Open [https://demo.ghaabor.io](https://demo.ghaabor.io)
 
 ### Undeploy controller
 Undeploy the controller to the cluster:

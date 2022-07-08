@@ -23,20 +23,22 @@ kind: Issuer
 metadata:
   name: letsencrypt
 spec:
-  acme:
-    # The ACME server URL
-    server: https://acme-staging-v02.api.letsencrypt.org/directory
-    # Email address used for ACME registration
-    email: email@example.com
-    # Name of a secret used to store the ACME account private key
-    privateKeySecretRef:
-      name: letsencrypt
-    # Enable the HTTP-01 challenge provider
-    solvers:
-    - http01:
-        ingress:
-          class:  nginx
+  selfSigned: {}
 ```
+
+Or [create your own CA](https://medium.com/nerd-for-tech/adventures-in-encryption-securing-your-laptop-kubernetes-cluster-9e032bf77f3e) and use that to generate keys:
+
+```yaml
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt
+spec:
+  ca:
+    secretName: supersecret-ca-keypair
+```
+
+**NOTE:** When using your own CA, don't forget to import the certificate into your browser of choice!
 
 ### Running on the cluster
 1. Deploy the controller to the cluster with the image specified by `IMG`:
@@ -51,7 +53,7 @@ make deploy IMG=ghcr.io/ghaabor/service-operator:main
 kubectl apply -f config/samples/
 ```
 
-3. Open [demo.ghaabor.io](http://demo.ghaabor.io)
+3. Open [https://demo.ghaabor.io](https://demo.ghaabor.io)
 
 ### Undeploy controller
 Undeploy the controller to the cluster:
